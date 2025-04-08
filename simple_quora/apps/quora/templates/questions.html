@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">All Questions</h1>
+
+{% for q in questions %}
+  <div class="mb-4 border p-4 rounded shadow relative">
+    <a href="{% url 'question-detail-view' q.pk %}" class="text-lg font-semibold hover:underline block">
+      {{ q.body|truncatechars:100 }}
+    </a>
+    <p class="text-sm text-gray-500">Asked by {{ q.user.get_full_name }} on {{ q.created_at|date:"M d, Y" }}</p>
+
+    {% if request.user == q.user %}
+    <div class="absolute right-2 top-2 flex space-x-2">
+      <button onclick="openEditModal({{ q.pk }}, '{{ q.body|escapejs }}')" class="text-blue-500 hover:text-blue-700">✏️</button>
+      <form method="post" action="{% url 'question-delete-view' q.pk %}" onsubmit="return confirm('Are you sure?');">
+        {% csrf_token %}
+        <button type="submit" class="text-red-500 hover:text-red-700">🗑️</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<div class="mt-6">
+  {% if is_paginated %}
+    <div class="flex space-x-2">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 bg-gray-200 rounded">Previous</a>
+      {% endif %}
+      <span class="px-3 py-1 bg-gray-300 rounded">{{ page_obj.number }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 bg-gray-200 rounded">Next</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<div id="questionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
+    <button onclick="toggleModal()" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+    <h2 class="text-xl font-semibold mb-4">Ask a Question</h2>
+    <form method="post" action="{% url 'add_question' %}">
+      {% csrf_token %}
+      {{ question_form.body.label_tag }}
+      {{ question_form.body }}
+      <button type="submit" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        Submit
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
+    <button onclick="toggleEditModal()" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+    <h2 class="text-xl font-semibold mb-4">Edit Question</h2>
+    <form id="editForm" method="post">
+      {% csrf_token %}
+      <label for="editBody" class="block mb-2 font-medium">Question</label>
+      <textarea name="body" id="editBody" rows="4" class="w-full border rounded p-2"></textarea>
+      <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Update
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function toggleModal() {
+    const modal = document.getElementById("questionModal");
+    modal.classList.toggle("hidden");
+    modal.classList.toggle("flex");
+  }
+
+  function toggleEditModal() {
+    const modal = document.getElementById("editModal");
+    modal.classList.toggle("hidden");
+    modal.classList.toggle("flex");
+  }
+
+  function openEditModal(id, body) {
+    toggleEditModal();
+    document.getElementById("editBody").value = body;
+    const form = document.getElementById("editForm");
+    form.action = `/qna/edit-question/${id}/`;
+  }
+</script>
+{% endblock %}

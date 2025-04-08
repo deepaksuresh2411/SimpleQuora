@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Quora</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 350px;
+    }
+    .switch-btns {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .switch-btns button {
+      flex: 1;
+      padding: 0.5rem;
+      font-weight: bold;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .switch-btns button.active {
+      border-color: #007BFF;
+      color: #007BFF;
+    }
+    form div {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .errors {
+      color: red;
+      font-size: 0.85rem;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 0.6rem;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="text-center" style="margin-bottom: 1.5rem;">
+      <h2 style="
+        font-size: 2rem;
+        color:rgb(12, 104, 184)
+      ">
+        Simple Quora
+      </h2>
+    </div>
+    <div class="switch-btns">
+      <button id="loginBtn" class="{% if not show_signup %}active{% endif %}" onclick="showForm('login')">Login</button>
+      <button id="signupBtn" class="{% if show_signup %}active{% endif %}" onclick="showForm('signup')">Signup</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" method="post" action="{% url 'signin' %}" style="{% if show_signup %}display:none;{% endif %}">
+      {% csrf_token %}
+      {% for field in signin_form %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {% for error in field.errors %}
+            <div class="errors">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      {% if signin_form.non_field_errors %}
+        {% for error in signin_form.non_field_errors %}
+          <div class="errors">{{ error }}</div>
+        {% endfor %}
+      {% endif %}
+      <button class="submit-btn" type="submit">Login</button>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signupForm" method="post" action="{% url 'signup' %}" style="{% if not show_signup %}display:none;{% endif %}">
+      {% csrf_token %}
+      {% for field in signup_form %}
+        <div>
+          {{ field.label_tag }}
+          {{ field }}
+          {% for error in field.errors %}
+            <div class="errors">{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+      {% if signup_form.non_field_errors %}
+        {% for error in signup_form.non_field_errors %}
+          <div class="errors">{{ error }}</div>
+        {% endfor %}
+      {% endif %}
+      <button class="submit-btn" type="submit">Signup</button>
+    </form>
+  </div>
+
+  <script>
+    function showForm(type) {
+      document.getElementById('loginForm').style.display = type === 'login' ? 'block' : 'none';
+      document.getElementById('signupForm').style.display = type === 'signup' ? 'block' : 'none';
+      document.getElementById('loginBtn').classList.toggle('active', type === 'login');
+      document.getElementById('signupBtn').classList.toggle('active', type === 'signup');
+    }
+  </script>
+</body>
+</html>
