@@ -1,7 +1,7 @@
 from django.urls import reverse
+from django.contrib.auth import login, logout
 from django.shortcuts import redirect, render
 from django.views.generic import View, TemplateView
-from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 
 from apps.users.forms import SignUpForm
@@ -28,7 +28,7 @@ class SignUpView(View):
         if signup_form.is_valid():
             user = signup_form.save()
             login(request, user)
-            return redirect('questions-list-view')
+            return redirect(reverse('questions-list-view'))
 
         return render(request, 'landing.html', {
             'signup_form': signup_form,
@@ -43,7 +43,7 @@ class SignInView(View):
         if signin_form.is_valid():
             user = signin_form.get_user()
             login(request, user)
-            return redirect('questions-list-view')
+            return redirect(reverse('questions-list-view'))
 
         return render(request, 'landing.html', {
             'signin_form': signin_form,

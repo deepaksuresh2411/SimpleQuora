@@ -1,8 +1,8 @@
-from django.urls import reverse_lazy, reverse
-from django.shortcuts import redirect, get_object_or_404
 from django.core.paginator import Paginator
-from django.http import HttpResponseForbidden, JsonResponse
+from django.urls import reverse_lazy, reverse
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseForbidden, JsonResponse
 from django.views.generic import (
     View,
     ListView, 
@@ -75,7 +75,7 @@ class DeleteQuestionView(LoginRequiredMixin, DeleteView):
     
     def dispatch(self, request, *args, **kwargs):
         if self.get_object().user != request.user:
-            return HttpResponseForbidden("You are not allowed to edit this question.")
+            return HttpResponseForbidden("You are not allowed to delete this question.")
 
         return super().dispatch(request, *args, **kwargs)
 

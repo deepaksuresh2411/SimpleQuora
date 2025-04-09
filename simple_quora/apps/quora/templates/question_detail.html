@@ -12,7 +12,7 @@
   <div class="mb-4 p-3 border rounded relative">
     <p>{{ answer.body }}</p>
     <div class="text-xs text-gray-500 mt-1">
-      Answered by {{ answer.user.get_full_name }} on {{ answer.created_at|date:"M d, Y H:i" }}
+      Answered by {{ answer.user.get_full_name }} on {{ answer.created_at }}
     </div>
     <div class="mt-2 flex items-center gap-2">
     <button 
@@ -34,15 +34,23 @@
   <p>No answers yet.</p>
 {% endfor %}
 
-<div class="mt-4">
+
+<div class="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
   {% if answers_page.has_previous %}
-    <a href="?page={{ answers_page.previous_page_number }}" class="px-3 py-1 bg-gray-200 rounded">Previous</a>
+    <a href="?page={{ answers_page.previous_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
+  {% else %}
+    <span class="px-3 py-1 bg-gray-100 rounded cursor-not-allowed text-gray-400">Previous</span>
   {% endif %}
-  <span class="px-3 py-1 bg-gray-300 rounded">{{ answers_page.number }}</span>
+
+  <span class="px-3 py-1 bg-gray-300 rounded">Page {{ answers_page.number }} of {{ answers_page.paginator.num_pages }}</span>
+
   {% if answers_page.has_next %}
-    <a href="?page={{ answers_page.next_page_number }}" class="px-3 py-1 bg-gray-200 rounded">Next</a>
+    <a href="?page={{ answers_page.next_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
+  {% else %}
+    <span class="px-3 py-1 bg-gray-100 rounded cursor-not-allowed text-gray-400">Next</span>
   {% endif %}
 </div>
+
 
 <!-- Add Answer Button -->
 {% if can_add_answer %}
@@ -152,7 +160,7 @@
             })
             .then(response => response.json())
             .then(data => {
-              this.textContent = (data.liked ? "❤️" : "♡") + data.like_count;
+              this.textContent = (data.liked ? " ♥️ " : " ♡ ") + data.like_count;
             })
             .catch(err => console.error("Like toggle failed:", err));
           });
