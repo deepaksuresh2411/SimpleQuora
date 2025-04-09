@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<h2 class="text-xl font-semibold">{{ question.body }}</h2>
+<p class="text-sm text-gray-500 mb-4">Asked by {{ question.user.get_full_name }} on {{ question.created_at }}</p>
+
+<hr class="my-4">
+
+<h3 class="text-lg font-bold mb-2">Answers</h3>
+
+{% for answer in answers_page %}
+  <div class="mb-4 p-3 border rounded relative">
+    <p>{{ answer.body }}</p>
+    <div class="text-xs text-gray-500 mt-1">
+      Answered by {{ answer.user.get_full_name }} on {{ answer.created_at }}
+    </div>
+    <div class="mt-2 flex items-center gap-2">
+    <button 
+      class="like-btn text-sm text-blue-600 hover:underline" 
+      data-answer-id="{{ answer.id }}">
+      ♡ {{ answer.likes }}
+    </button>
+
+      {% if request.user == answer.user %}
+        <button onclick="openEditAnswerModal({{ answer.id }}, '{{ answer.body|escapejs }}')" class="text-sm text-yellow-600">✏️ Edit</button>
+        <form method="post" action="{% url 'answer-delete-view' answer.id %}" class="inline" onsubmit="return confirm('Are you sure?');">
+          {% csrf_token %}
+          <button type="submit" class="text-sm text-red-600">🗑️ Delete</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+{% empty %}
+  <p>No answers yet.</p>
+{% endfor %}
+
+
+<div class="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+  {% if answers_page.has_previous %}
+    <a href="?page={{ answers_page.previous_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Previous</a>
+  {% else %}
+    <span class="px-3 py-1 bg-gray-100 rounded cursor-not-allowed text-gray-400">Previous</span>
+  {% endif %}
+
+  <span class="px-3 py-1 bg-gray-300 rounded">Page {{ answers_page.number }} of {{ answers_page.paginator.num_pages }}</span>
+
+  {% if answers_page.has_next %}
+    <a href="?page={{ answers_page.next_page_number }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next</a>
+  {% else %}
+    <span class="px-3 py-1 bg-gray-100 rounded cursor-not-allowed text-gray-400">Next</span>
+  {% endif %}
+</div>
+
+
+<!-- Add Answer Button -->
+{% if can_add_answer %}
+<button onclick="toggleAnswerModal()" class="mt-6 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+  Add Answer
+</button>
+{% endif %}
+
+<!-- Add Answer Modal -->
+<div id="answerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
+    <button onclick="toggleAnswerModal()" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+    <hr class="my-4">
+    <h3 class="text-lg font-bold mb-2">Your Answer</h3>
+    <form id="answer-form" method="POST" data-question-id="{{ question.id }}">
+      {% csrf_token %}
+      <textarea name="body" id="answer-body" rows="4" placeholder="Your answer..." class="w-full p-2 border rounded"></textarea>
+      <button type="submit" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Submit Answer</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Answer Modal -->
+<div id="editAnswerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded shadow-lg relative">
+    <button onclick="toggleEditAnswerModal()" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+    <h2 class="text-xl font-semibold mb-4">Edit Answer</h2>
+    <form id="editAnswerForm" method="post">
+      {% csrf_token %}
+      <label for="editAnswerBody" class="block mb-2 font-medium">Answer</label>
+      <textarea name="body" id="editAnswerBody" rows="4" class="w-full border rounded p-2"></textarea>
+      <button type="submit" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Update
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  
+  function toggleAnswerModal() {
+    const modal = document.getElementById("answerModal");
+    modal.classList.toggle("hidden");
+    modal.classList.toggle("flex");
+  }
+
+  function toggleEditAnswerModal() {
+    const modal = document.getElementById("editAnswerModal");
+    modal.classList.toggle("hidden");
+    modal.classList.toggle("flex");
+  }
+
+  function openEditAnswerModal(id, body) {
+    toggleEditAnswerModal();
+    document.getElementById("editAnswerBody").value = body;
+    const form = document.getElementById("editAnswerForm");
+    form.action = `/qna/edit-answer/${id}/`;
+  }
+  
+  document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("answer-form");
+    
+      form.onsubmit = function (event) {
+        event.preventDefault(); // prevent normal form submission
+    
+        const questionId = form.dataset.questionId;
+        const body = document.getElementById("answer-body").value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+        fetch(`/qna/add-answer/${questionId}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrfToken
+          },
+          body: new URLSearchParams({ body })
+        })
+        .then(response => {
+          if (response.redirected) {
+            window.location.href = response.url;
+          } else {
+            return response.text().then(html => {
+              document.body.innerHTML = html;
+            });
+          }
+        })
+        .catch(error => {
+          console.error("Error submitting answer:", error);
+        });
+      };
+    });        
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+        document.querySelectorAll(".like-btn").forEach(button => {
+          button.addEventListener("click", function () {
+            const answerId = this.getAttribute("data-answer-id");
+            fetch(`/qna/toggle-answer-like/${answerId}/`, {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": csrfToken,
+                "Content-Type": "application/json",
+              },
+            })
+            .then(response => response.json())
+            .then(data => {
+              this.textContent = (data.liked ? " ♥️ " : " ♡ ") + data.like_count;
+            })
+            .catch(err => console.error("Like toggle failed:", err));
+          });
+        });
+      });
+
+  </script>
+{% endblock %}
