@@ -1,6 +1,6 @@
 # SimpleQuora
 
-A simplified version of Quora built with Django allowing users to ask questions, provide answers. This project was created as an assignment for TransportSimple.
+A simplified version of Quora built with Django allowing users to ask questions, provide answers.
 
 ## Features
 
